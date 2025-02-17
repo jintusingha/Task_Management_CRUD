@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { getTasks, deleteTask } from '../services/taskService';
 
-const TaskList = ({ onEdit }) => {  // Accept onEdit as a prop
+const TaskList = () => {
     const [tasks, setTasks] = useState([]);
+    const [filteredTasks, setFilteredTasks] = useState([]);
+    const [filterStatus, setFilterStatus] = useState(''); // Default: Show all
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         loadTasks();
     }, []);
+
+    useEffect(() => {
+        applyFilter();
+    }, [filterStatus, tasks]);
 
     const loadTasks = async () => {
         try {
@@ -22,6 +28,15 @@ const TaskList = ({ onEdit }) => {  // Accept onEdit as a prop
         }
     };
 
+    const applyFilter = () => {
+        if (filterStatus === '') {
+            setFilteredTasks(tasks); // Show all if no filter selected
+        } else {
+            const filtered = tasks.filter(task => task.status === filterStatus);
+            setFilteredTasks(filtered);
+        }
+    };
+
     const handleDelete = async (id) => {
         try {
             await deleteTask(id);
@@ -32,10 +47,6 @@ const TaskList = ({ onEdit }) => {  // Accept onEdit as a prop
         }
     };
 
-    const handleEdit = (task) => {
-        onEdit(task); // Call the onEdit function passed from App.js
-    };
-
     if (loading) return <div className="spinner-border" role="status"><span className="sr-only">Loading...</span></div>;
 
     if (error) return <div className="alert alert-danger">{error}</div>;
@@ -43,7 +54,24 @@ const TaskList = ({ onEdit }) => {  // Accept onEdit as a prop
     return (
         <div className="container mt-4">
             <h2>Task List</h2>
-            {tasks.length === 0 ? (
+            
+            {/* Filter Dropdown */}
+            <div className="mb-3">
+                <label htmlFor="filterStatus" className="form-label">Filter by Status:</label>
+                <select
+                    id="filterStatus"
+                    className="form-select"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                    <option value="">All</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+
+            {filteredTasks.length === 0 ? (
                 <p>No tasks available.</p>
             ) : (
                 <table className="table table-striped">
@@ -57,14 +85,14 @@ const TaskList = ({ onEdit }) => {  // Accept onEdit as a prop
                         </tr>
                     </thead>
                     <tbody>
-                        {tasks.map((task) => (
+                        {filteredTasks.map((task) => (
                             <tr key={task.id}>
                                 <td>{task.title}</td>
                                 <td>{task.description}</td>
                                 <td>{task.status}</td>
                                 <td>{task.due_date.split('T')[0]}</td> {/* Format the date */}
                                 <td>
-                                    <button className="btn btn-primary" onClick={() => handleEdit(task)}>Edit</button>
+                                    <button className="btn btn-primary" onClick={() => alert('Edit functionality not implemented yet')}>Edit</button>
                                     <button className="btn btn-danger ml-2" onClick={() => handleDelete(task.id)}>Delete</button>
                                 </td>
                             </tr>
